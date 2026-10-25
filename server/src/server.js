@@ -1,7 +1,7 @@
 import { env } from './config/env.js';
 import { connectDb, disconnectDb } from './config/db.js';
 import { resolveMongoUri, stopLocalMongo } from './config/resolveDb.js';
-import { ensureLocalSeed } from './services/seed.js';
+import { ensureLocalSeed, ensureOwnerFromEnv } from './services/seed.js';
 import { runMigrations } from './services/migrations.js';
 import { createApp } from './app.js';
 import { closePdfBrowser } from './services/pdf.js';
@@ -10,6 +10,7 @@ async function main() {
   await connectDb(await resolveMongoUri());
   await runMigrations();
   if (env.useLocalMongo) await ensureLocalSeed();
+  else await ensureOwnerFromEnv();
 
   const server = createApp().listen(env.PORT, () => console.log(`API listening on http://localhost:${env.PORT}`));
   server.on('error', (err) => {

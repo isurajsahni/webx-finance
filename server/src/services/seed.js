@@ -104,3 +104,28 @@ export async function ensureLocalSeed() {
   await seedDatabase();
   console.log(`\n  Sign in with ${process.env.SEED_OWNER_EMAIL} and the SEED_OWNER_PASSWORD from server/.env\n`);
 }
+
+/**
+ * Hosted databases (Atlas): no shell needed. If there are no users yet, create
+ * the owner and defaults from SEED_OWNER_EMAIL / SEED_OWNER_PASSWORD. With
+ * SEED_RESET_OWNER_PASSWORD=true, also set that owner's password from the env
+ * (and create the owner if that email has no account). Never stops the server.
+ */
+export async function ensureOwnerFromEnv() {
+  const reset = process.env.SEED_RESET_OWNER_PASSWORD === 'true';
+  const hasUsers = await User.exists({});
+  if (hasUsers && !reset) return;
+
+  const { email, password } = ownerFromEnv();
+  if (!email || !password) {
+    console.warn('No owner can sign in yet: set SEED_OWNER_EMAIL and SEED_OWNER_PASSWORD in the environment, then restart.');
+    return;
+  }
+  try {
+    await seedDatabase({ resetPassword: reset });
+    console.log(`Owner ready: sign in with ${email} and SEED_OWNER_PASSWORD.`);
+    if (reset) console.warn('SEED_RESET_OWNER_PASSWORD is on: remove it now, or the password is reset on every restart.');
+  } catch (err) {
+    console.error(`Could not set up the owner: ${err.message}`);
+  }
+}

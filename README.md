@@ -118,7 +118,8 @@ The production server also serves the built app, so you deploy **one service**. 
 | `CLIENT_URL` | the public URL, e.g. `https://finance.thewebxstudio.com` |
 | `TRUST_PROXY` | `1` behind Render / Railway / Nginx |
 | `COOKIE_SECURE` | leave unset (defaults to `true`; requires HTTPS) |
-| `SEED_OWNER_EMAIL`, `SEED_OWNER_PASSWORD` | for the first `npm run seed` |
+| `SEED_OWNER_EMAIL`, `SEED_OWNER_PASSWORD` | the owner login, created automatically on the first start (when the database has no users) |
+| `SEED_RESET_OWNER_PASSWORD` | `true` only to reset the owner's password from `SEED_OWNER_PASSWORD` on the next start; remove it afterwards |
 | `UPLOAD_DIR` | `uploads` (mount the persistent disk at `server/uploads`) |
 
 ### Option A: Docker (Render, Railway, Fly.io, any VPS)
@@ -132,7 +133,7 @@ docker build -t webx-finance .
 docker run -p 5050:5050 --env-file server/.env -v webx-uploads:/app/server/uploads webx-finance
 ```
 
-On Render or Railway: create a **Web Service from the repo** using the Dockerfile, add the environment variables, attach a **disk at `/app/server/uploads`**, and set the health check path to `/api/health`. After the first deploy, run `npm run seed` once from the service shell.
+On Render or Railway: create a **Web Service from the repo** using the Dockerfile, add the environment variables, attach a **disk at `/app/server/uploads`**, and set the health check path to `/api/health`. On the first start the app creates the owner from `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (no shell needed); the log says `Owner ready`.
 
 ### Option B: a VPS with Node + PM2 + Nginx
 

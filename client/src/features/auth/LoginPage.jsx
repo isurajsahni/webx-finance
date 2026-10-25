@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { errorMessage } from '@/api/client';
 import { Button, Field, Input } from '@/components/ui';
 import { useAuth } from './AuthContext';
@@ -65,6 +65,9 @@ export function LoginPage() {
               The Web<span className="text-brand-500">{'{X}'}</span> Studio
             </p>
           </div>
+          <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-body">
+            <ArrowLeft className="size-3.5" /> Home
+          </Link>
           <h1 className="text-2xl font-black tracking-tight text-ink">Sign in</h1>
           <p className="mt-1 text-sm text-muted">Welcome back. Enter your details to continue.</p>
 

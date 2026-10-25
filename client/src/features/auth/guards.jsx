@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { ErrorState, LoadingState } from '@/components/ui';
+import { LandingPage } from '@/features/landing/LandingPage';
 import { useAuth } from './AuthContext';
 
 export function RequireAuth() {
@@ -7,7 +8,8 @@ export function RequireAuth() {
   const location = useLocation();
   if (isLoading) return <div className="grid min-h-screen place-items-center"><LoadingState /></div>;
   if (error) return <div className="grid min-h-screen place-items-center"><ErrorState error={error} onRetry={() => window.location.reload()} /></div>;
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  // Signed-out visitors to the home page see the landing page; anything else goes to sign-in.
+  if (!user) return location.pathname === '/' ? <LandingPage /> : <Navigate to="/login" replace state={{ from: location }} />;
   return <Outlet />;
 }
 
