@@ -2,7 +2,7 @@ import { computeInvoice, splitNote, gstModeFor } from '@webx/shared/invoiceMath.
 import { isIndia, stateCodeFor } from '@webx/shared/india.js';
 import { formatDocNumber } from '@webx/shared/numbering.js';
 import { fyLabel } from '@webx/shared/fy.js';
-import { BankAccount, Client, Invoice, Settings } from '../models/index.js';
+import { BankAccount, Client, Invoice, Payment, Settings } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { allocateNumber, registerManualSeq } from './numbering.js';
 
@@ -75,7 +75,9 @@ export async function buildInvoiceFields(body, { client, existing } = {}) {
   });
 
   const dueDate = body.dueDate || null;
-  const note = body.noteIsCustom && body.note ? body.note : splitNote({ split: computed.split, total: computed.total, currency: body.currency, dueDate, paid: paidSummary(body.paid) });
+  // Money already in (payments being billed now, or ones recorded earlier) is counted, so the note asks only for what is left.
+  const received = paidSummary(body.paid) ?? (existing && existing.amountPaid + existing.tdsAmount > 0 ? await receivedSummary(existing._id) : null);
+  const note = body.noteIsCustom && body.note ? body.note : splitNote({ split: computed.split, total: computed.total, currency: body.currency, dueDate, paid: received });
 
   const amountPaid = existing?.amountPaid ?? 0;
   const tdsAmount = existing?.tdsAmount ?? 0;
@@ -141,6 +143,17 @@ export function paidSummary(paid) {
   const amount = paid.reduce((s, p) => s + p.amount + p.tds, 0);
   const date = paid.map((p) => new Date(p.date)).sort((a, b) => b - a)[0];
   return { amount, date, count: paid.length };
+}
+
+/** The same summary for the payments already recorded on an invoice. */
+export async function receivedSummary(invoiceId) {
+  return paidSummary(await Payment.find({ invoice: invoiceId, status: 'active' }).select('date amount tds').lean());
+}
+
+/** The auto-written note for a saved invoice, counting what it has received. Custom notes are left alone. */
+export async function refreshAutoNote(inv) {
+  if (inv.noteIsCustom) return;
+  inv.note = splitNote({ split: inv.split, total: inv.total, currency: inv.currency, dueDate: inv.dueDate, paid: await receivedSummary(inv._id) });
 }
 
 /** Payments received before billing can't add up to more than the invoice. Checked before anything is saved. */

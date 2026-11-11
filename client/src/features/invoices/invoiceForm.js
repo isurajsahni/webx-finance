@@ -250,7 +250,7 @@ export function toPayload(v, { status, lockedNumber, docType = 'invoice' } = {})
 }
 
 /** Everything the template needs, computed exactly as the server will. */
-export function previewModel(v, { settings, client, bank, number, docType = 'invoice', existing }) {
+export function previewModel(v, { settings, client, bank, number, docType = 'invoice', existing, recorded = [] }) {
   const core = coreInputs(v);
   const company = settings?.company || {};
   const gstOn = !!settings?.gst?.enabled && v.gstEnabled;
@@ -260,7 +260,9 @@ export function previewModel(v, { settings, client, bank, number, docType = 'inv
   });
   const dueDate = v.dueType === 'date' && v.dueDate ? v.dueDate : null;
   // An "already paid" invoice previews exactly as it will be saved: its payments listed, then the balance.
-  const paidRows = docType === 'invoice' && computed.total > 0 ? paidPayments(v).filter((r) => r.date && r.amount + r.tds > 0) : [];
+  // An invoice being edited shows the payments already recorded on it the same way.
+  const newRows = docType === 'invoice' && computed.total > 0 ? paidPayments(v).filter((r) => r.date && r.amount + r.tds > 0) : [];
+  const paidRows = newRows.length ? newRows : recorded;
   const received = paidSummary(paidRows);
   const splitText = splitNote({ split: computed.split, total: computed.total, currency: v.currency, dueDate, paid: received });
   const quoteLine = docType === 'quote' ? settings?.quoteDefaults?.note : '';
@@ -271,12 +273,13 @@ export function previewModel(v, { settings, client, bank, number, docType = 'inv
         status: received.amount >= computed.total ? 'paid' : 'partly_paid',
         payments: paidRows.map((r) => {
           settled += r.amount + r.tds;
-          return { ...r, receiptNumber: '', purpose: settled >= computed.total ? 'final' : 'part' };
+          return { ...r, receiptNumber: r.receiptNumber || '', purpose: r.purpose || (settled >= computed.total ? 'final' : 'part') };
         }),
       }
     : {};
   return {
     autoNote,
+    received: received?.amount || 0,
     invoice: {
       ...computed,
       discount: core.discount,

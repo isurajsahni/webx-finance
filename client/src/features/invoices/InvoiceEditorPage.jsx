@@ -13,7 +13,7 @@ import { formatLongDate } from '@webx/shared/fy.js';
 import { lineAmount } from '@webx/shared/invoiceMath.js';
 import { renderInvoice } from '@webx/shared/templates/index.js';
 import { api, applyServerErrors, errorMessage } from '@/api/client';
-import { useBankAccounts, useClients, useInvoice, useNextDocNumber, useQuote, useServices, useSettings } from '@/api/hooks';
+import { useBankAccounts, useClients, useInvoice, useNextDocNumber, usePayments, useQuote, useServices, useSettings } from '@/api/hooks';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { Button, Card, CardHeader, Field, Input, MoneyInput, QueryState, Select, Switch, Textarea } from '@/components/ui';
 import { previewAssets } from '@/lib/documentAssets';
@@ -354,9 +354,19 @@ function Editor({ settings, invoice, banks, docType = 'invoice' }) {
   const selectedClient = v.clientMode === 'new' ? { ...emptyClient, ...v.newClient, stateCode: isIndia(v.newClient?.country) ? stateCodeFor(v.newClient?.state) : '' } : clientList.find((c) => c._id === v.client) || (isEdit && invoice.client === v.client ? invoice.snapshot.client : null);
   const bank = banks.find((b) => b._id === v.bankAccount);
 
-  const { invoice: model, autoNote } = useMemo(
-    () => previewModel(v, { settings, client: selectedClient, bank, number, docType, existing: invoice }),
-    [v, settings, selectedClient, bank, number, docType, invoice],
+  // Payments already recorded on this invoice (e.g. an advance), so totals and the note ask only for the rest.
+  const hasRecorded = isEdit && !isQuote && invoice.amountPaid + invoice.tdsAmount > 0;
+  const recordedQuery = usePayments({ invoice: invoice?._id, status: 'active', limit: 100 }, { enabled: hasRecorded });
+  const recorded = useMemo(
+    () => (hasRecorded ? (recordedQuery.data?.items || []).filter((p) => p.status === 'active') : [])
+      .map((p) => ({ date: p.date, amount: p.amount, tds: p.tds || 0, receiptNumber: p.receiptNumber, purpose: p.purpose }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [hasRecorded, recordedQuery.data],
+  );
+
+  const { invoice: model, autoNote, received } = useMemo(
+    () => previewModel(v, { settings, client: selectedClient, bank, number, docType, existing: invoice, recorded }),
+    [v, settings, selectedClient, bank, number, docType, invoice, recorded],
   );
 
   // The note follows the payment split until the person edits it.
@@ -609,7 +619,13 @@ function Editor({ settings, invoice, banks, docType = 'invoice' }) {
                 )}
                 <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
                   <div><dt className="text-xs text-muted">Total</dt><dd className="font-bold tabular-nums">{formatMoney(model.total, v.currency)}</dd></div>
-                  {v.splitType === 'advance' && (
+                  {received > 0 && (
+                    <>
+                      <div><dt className="text-xs text-muted">Already received</dt><dd className="font-bold tabular-nums text-emerald-600">{formatMoney(received, v.currency)}</dd></div>
+                      <div><dt className="text-xs text-muted">Balance due</dt><dd className="font-bold text-brand-600 tabular-nums">{formatMoney(Math.max(0, model.total - received), v.currency)}</dd></div>
+                    </>
+                  )}
+                  {v.splitType === 'advance' && !received && (
                     <>
                       <div><dt className="text-xs text-muted">Due now</dt><dd className="font-bold text-brand-600 tabular-nums">{formatMoney(model.split.advanceAmount, v.currency)}</dd></div>
                       <div><dt className="text-xs text-muted">On completion</dt><dd className="font-bold tabular-nums">{formatMoney(model.split.balanceAmount, v.currency)}</dd></div>

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { BankAccount, Invoice, Payment, Settings } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { allocateNumber } from './numbering.js';
-import { applyPaymentState, finalizeInvoice } from './invoices.js';
+import { applyPaymentState, finalizeInvoice, refreshAutoNote } from './invoices.js';
 
 /**
  * Recalculate an invoice's paid / TDS / balance / status from its active
@@ -19,6 +19,7 @@ export async function syncInvoicePayments(invoiceId) {
   inv.tdsAmount = sum?.tds ?? 0;
   const before = inv.status;
   applyPaymentState(inv);
+  await refreshAutoNote(inv);
   if (inv.status !== before) inv.$locals.auditAction = 'status';
   await inv.save();
   return inv;
