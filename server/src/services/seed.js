@@ -66,7 +66,8 @@ export function ownerFromEnv() {
   return {
     email: process.env.SEED_OWNER_EMAIL?.trim().toLowerCase(),
     name: process.env.SEED_OWNER_NAME?.trim() || 'Owner',
-    password: process.env.SEED_OWNER_PASSWORD,
+    // Trimmed: a space or line break pasted into a hosting dashboard would otherwise become part of the password.
+    password: process.env.SEED_OWNER_PASSWORD?.trim(),
   };
 }
 
@@ -112,9 +113,14 @@ export async function ensureLocalSeed() {
  * (and create the owner if that email has no account). Never stops the server.
  */
 export async function ensureOwnerFromEnv() {
-  const reset = process.env.SEED_RESET_OWNER_PASSWORD === 'true';
+  const reset = /^(true|1|yes)$/i.test(process.env.SEED_RESET_OWNER_PASSWORD?.trim() ?? '');
   const hasUsers = await User.exists({});
-  if (hasUsers && !reset) return;
+  if (hasUsers && !reset) {
+    // Shown in the host's logs, so a wrong email on the login page is easy to spot.
+    const owners = await User.find({ role: 'owner', isActive: true }).select('email').lean();
+    console.log(`Owner login: ${owners.map((o) => o.email).join(', ') || 'no active owner'}. To set the password from SEED_OWNER_PASSWORD, add SEED_RESET_OWNER_PASSWORD=true and restart.`);
+    return;
+  }
 
   const { email, password } = ownerFromEnv();
   if (!email || !password) {
