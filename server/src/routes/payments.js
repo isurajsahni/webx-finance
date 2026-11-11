@@ -6,6 +6,7 @@ import { multipartJson } from '../middleware/multipartJson.js';
 import { idParams } from '../validators/common.js';
 import { paymentBody, voidBody, listPaymentsQuery } from '../validators/payments.js';
 import * as c from '../controllers/paymentController.js';
+import * as del from '../controllers/deleteController.js';
 
 const r = Router();
 r.get('/', validate({ query: listPaymentsQuery }), c.listPayments);
@@ -15,4 +16,5 @@ r.get('/:id/receipt', validate({ params: idParams }), c.receiptPdf);
 r.post('/', upload(DOCUMENT_TYPES).single('proof'), multipartJson, validate({ body: paymentBody }), c.create);
 r.post('/:id/proof', validate({ params: idParams }), upload(DOCUMENT_TYPES).single('proof'), c.uploadProof);
 r.post('/:id/void', ownerOnly, validate({ params: idParams, body: voidBody }), c.voidOne);
+r.delete('/:id', ownerOnly, validate({ params: idParams }), del.payment);
 export default r;

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validate } from '../middleware/validate.js';
 import { ownerOnly } from '../middleware/auth.js';
+import * as del from '../controllers/deleteController.js';
 import { upload, DOCUMENT_TYPES } from '../middleware/upload.js';
 import { multipartJson } from '../middleware/multipartJson.js';
 import { idParams } from '../validators/common.js';
@@ -20,6 +21,7 @@ expenses.post('/', bills, multipartJson, validate({ body: v.expenseBody }), e.cr
 expenses.put('/:id', id, bills, multipartJson, validate({ body: v.expenseBody }), e.updateExpense);
 expenses.post('/:id/record-next', id, e.recordNext);
 expenses.post('/:id/void', ownerOnly, id, validate({ body: v.reasonBody }), e.voidOne(false));
+expenses.delete('/:id', ownerOnly, id, del.expense);
 
 export const reimbursements = Router();
 reimbursements.get('/', validate({ query: v.listExpensesQuery }), e.listReimbursements);
@@ -31,6 +33,7 @@ reimbursements.post('/:id/approve', ownerOnly, id, e.approve);
 reimbursements.post('/:id/reject', ownerOnly, id, validate({ body: v.reasonBody }), e.reject);
 reimbursements.post('/:id/reimburse', id, validate({ body: v.reimburseBody }), e.reimburse);
 reimbursements.post('/:id/void', ownerOnly, id, validate({ body: v.reasonBody }), e.voidOne(true));
+reimbursements.delete('/:id', ownerOnly, id, del.reimbursement);
 
 export const team = Router();
 team.get('/', t.listMembers);
@@ -49,3 +52,4 @@ payouts.get('/:id', id, t.getPayout);
 payouts.get('/:id/payslip', id, t.payslipPdf);
 payouts.post('/', validate({ body: v.payoutBody }), t.createPayout);
 payouts.post('/:id/void', ownerOnly, id, validate({ body: v.reasonBody }), t.voidPayout);
+payouts.delete('/:id', ownerOnly, id, del.payout);

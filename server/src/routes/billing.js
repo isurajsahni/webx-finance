@@ -4,6 +4,8 @@ import { idParams } from '../validators/common.js';
 import { billingBody } from '../validators/invoices.js';
 import * as q from '../controllers/quoteController.js';
 import * as s from '../controllers/serviceController.js';
+import * as del from '../controllers/deleteController.js';
+import { ownerOnly } from '../middleware/auth.js';
 
 const id = validate({ params: idParams });
 
@@ -14,6 +16,7 @@ quotes.get('/:id', id, q.get);
 quotes.get('/:id/pdf', id, q.pdf);
 quotes.post('/', validate({ body: billingBody }), q.create);
 quotes.put('/:id', id, validate({ body: billingBody }), q.update);
+quotes.delete('/:id', ownerOnly, id, del.quote);
 quotes.post('/:id/send', id, q.send);
 quotes.post('/:id/accept', id, q.accept);
 quotes.post('/:id/decline', id, q.decline);

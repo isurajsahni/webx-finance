@@ -5,6 +5,7 @@ import { idParams } from '../validators/common.js';
 import { upload, LOGO_TYPES } from '../middleware/upload.js';
 import { clientBody } from '../validators/clients.js';
 import * as c from '../controllers/clientController.js';
+import * as del from '../controllers/deleteController.js';
 
 const r = Router();
 r.get('/', c.listClients);
@@ -16,4 +17,5 @@ r.post('/:id/logo', validate({ params: idParams }), upload(LOGO_TYPES).single('l
 r.delete('/:id/logo', validate({ params: idParams }), c.removeLogo);
 r.post('/:id/archive', ownerOnly, validate({ params: idParams }), c.setArchived);
 r.post('/:id/unarchive', ownerOnly, validate({ params: idParams }), c.setArchived);
+r.delete('/:id', ownerOnly, validate({ params: idParams }), del.client);
 export default r;

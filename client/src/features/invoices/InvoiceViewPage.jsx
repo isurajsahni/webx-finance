@@ -15,6 +15,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { previewAssets } from '@/lib/documentAssets';
 import { Button, Card, CardHeader, Field, Modal, ModalFooter, QueryState, Textarea } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { InvoiceStatusBadge } from './StatusBadge';
 import { HandoverPanel } from './HandoverPanel';
 
@@ -156,6 +157,13 @@ function View({ invoice, settings }) {
               {isOwner && invoice.status !== 'cancelled' && invoice.amountPaid + invoice.tdsAmount === 0 && (
                 <Button variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setCancelling(true)}><Ban className="size-4" /> Cancel invoice</Button>
               )}
+              <DeleteRecord
+                url={`/invoices/${invoice._id}`}
+                what={invoice.number ? `invoice ${invoice.number}` : 'this draft'}
+                details={invoice.amountPaid + invoice.tdsAmount > 0 ? 'Every payment recorded on this invoice, and its receipt, is deleted too.' : undefined}
+                invalidate={[['invoices'], ['payments'], ['clients'], ['quotes']]}
+                to="/invoices"
+              />
             </div>
             {locked && (
               <p className="flex items-center gap-2 border-t border-line/60 px-5 py-3 text-xs text-muted">

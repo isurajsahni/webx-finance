@@ -9,6 +9,7 @@ import { useApiMutation, useQuote, useSettings } from '@/api/hooks';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { previewAssets } from '@/lib/documentAssets';
 import { Button, Card, CardHeader, Field, Modal, ModalFooter, QueryState, Textarea } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { QuoteStatusBadge } from './QuoteStatusBadge';
 
 function View({ quote, settings }) {
@@ -78,6 +79,7 @@ function View({ quote, settings }) {
                 <p className="text-xs text-muted">Declined{quote.declineReason ? `: ${quote.declineReason}` : ''}.</p>
               )}
               <Button variant="secondary" onClick={() => dup.mutate()} loading={dup.isPending}><Copy className="size-4" /> Duplicate as new version</Button>
+              <DeleteRecord url={`/quotes/${quote._id}`} what={quote.number ? `quote ${quote.number}` : 'this draft quote'} invalidate={[['quotes'], ['invoices']]} to="/quotes" />
             </div>
           </Card>
         </div>

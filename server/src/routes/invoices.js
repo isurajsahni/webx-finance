@@ -4,6 +4,7 @@ import { ownerOnly } from '../middleware/auth.js';
 import { idParams } from '../validators/common.js';
 import { invoiceBody, cancelBody, listInvoicesQuery, handoverBody } from '../validators/invoices.js';
 import * as c from '../controllers/invoiceController.js';
+import * as del from '../controllers/deleteController.js';
 
 const r = Router();
 r.get('/', validate({ query: listInvoicesQuery }), c.listInvoices);
@@ -16,4 +17,5 @@ r.put('/:id/handover', validate({ params: idParams, body: handoverBody }), c.upd
 r.post('/:id/send', validate({ params: idParams }), c.markSent);
 r.post('/:id/duplicate', validate({ params: idParams }), c.duplicate);
 r.post('/:id/cancel', ownerOnly, validate({ params: idParams, body: cancelBody }), c.cancel);
+r.delete('/:id', ownerOnly, validate({ params: idParams }), del.invoice);
 export default r;

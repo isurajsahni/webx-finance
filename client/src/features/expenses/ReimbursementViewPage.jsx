@@ -17,6 +17,7 @@ import { DocumentPreview } from '@/components/DocumentPreview';
 import { FilesField } from '@/components/FilesField';
 import { previewAssets } from '@/lib/documentAssets';
 import { Button, Card, CardHeader, Field, Input, Modal, ModalFooter, QueryState, Select } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { ExpenseForm } from './ExpenseForm';
 import { ReasonForm } from './ReasonForm';
 import { ReimbursementBadge } from './ReimbursementStatus';
@@ -149,6 +150,7 @@ function View({ claim, settings }) {
           ) : (
             isOwner && <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50" onClick={() => setModal('void')}><Ban className="size-4" /> Void claim</Button>
           )}
+          <DeleteRecord url={`/reimbursements/${claim._id}`} what={claim.voucherNumber ? `claim ${claim.voucherNumber}` : 'this claim'} invalidate={[['reimbursements'], ['expenses']]} to="/reimbursements" />
         </div>
       </div>
 

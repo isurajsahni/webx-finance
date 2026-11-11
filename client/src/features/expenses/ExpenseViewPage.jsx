@@ -14,6 +14,7 @@ import { DocumentPreview } from '@/components/DocumentPreview';
 import { FilesField } from '@/components/FilesField';
 import { previewAssets } from '@/lib/documentAssets';
 import { Badge, Button, Card, CardHeader, Modal, QueryState } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { ExpenseForm } from './ExpenseForm';
 import { ReasonForm } from './ReasonForm';
 
@@ -81,6 +82,7 @@ function View({ expense, settings }) {
           ) : (
             isOwner && <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50" onClick={() => setVoiding(true)}><Ban className="size-4" /> Void expense</Button>
           )}
+          <DeleteRecord url={`/expenses/${expense._id}`} what={expense.voucherNumber || 'this expense'} invalidate={[['expenses'], ['team']]} to="/expenses" />
         </div>
       </div>
 

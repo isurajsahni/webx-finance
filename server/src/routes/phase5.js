@@ -3,6 +3,7 @@ import { ownerOnly } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { idParams } from '../validators/common.js';
 import * as c from '../controllers/reportController.js';
+import * as del from '../controllers/deleteController.js';
 
 export const ledger = Router();
 ledger.get('/', c.ledger);
@@ -10,6 +11,7 @@ ledger.get('/balances', c.balances);
 ledger.get('/entries', c.listEntries);
 ledger.post('/entries', ownerOnly, c.createEntry);
 ledger.post('/entries/:id/void', ownerOnly, validate({ params: idParams }), c.voidEntry);
+ledger.delete('/entries/:id', ownerOnly, validate({ params: idParams }), del.ledgerEntry);
 
 export const reports = Router();
 reports.get('/pnl', c.pnl);

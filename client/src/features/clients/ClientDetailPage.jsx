@@ -10,6 +10,7 @@ import { useApiMutation, useClient, useInvoices, usePayments } from '@/api/hooks
 import { PaymentsTable } from '@/features/payments/PaymentsTable';
 import { useAuth } from '@/features/auth/AuthContext';
 import { Badge, Button, Card, CardHeader, EmptyState, Modal, QueryState } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { InvoicesTable } from '@/features/invoices/InvoicesTable';
 import { ClientForm } from './ClientForm';
 import { StatementCard } from './StatementCard';
@@ -94,6 +95,7 @@ function ClientBody({ client }) {
               {client.isArchived ? 'Restore' : 'Archive'}
             </Button>
           )}
+          <DeleteRecord url={`/clients/${client._id}`} what={client.name} details="Only a client with no invoices or quotes can be deleted. Otherwise, archive it." invalidate={[['clients']]} to="/clients" full={false} />
           <Button variant="secondary" onClick={() => setEditing(true)}>
             <Pencil className="size-4" /> Edit
           </Button>

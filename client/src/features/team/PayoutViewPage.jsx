@@ -12,6 +12,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { previewAssets } from '@/lib/documentAssets';
 import { Badge, Button, Card, CardHeader, Modal, QueryState } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { ReasonForm } from '@/features/expenses/ReasonForm';
 
 function View({ payout, settings }) {
@@ -58,6 +59,7 @@ function View({ payout, settings }) {
           ) : (
             isOwner && <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50" onClick={() => setVoiding(true)}><Ban className="size-4" /> Void payout</Button>
           )}
+          <DeleteRecord url={`/payouts/${payout._id}`} what={payout.voucherNumber || 'this payout'} invalidate={[['payouts'], ['team']]} to="/team" />
         </div>
       </div>
       <Modal open={voiding} onClose={() => setVoiding(false)} title={`Void ${payout.voucherNumber}?`} size="sm">

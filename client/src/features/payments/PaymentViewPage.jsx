@@ -14,6 +14,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { previewAssets } from '@/lib/documentAssets';
 import { Badge, Button, Card, CardHeader, Field, Modal, ModalFooter, QueryState, Textarea } from '@/components/ui';
+import { DeleteRecord } from '@/components/DeleteRecord';
 
 const voidSchema = z.object({ reason: z.string().trim().min(3, 'Give a reason (min 3 characters)').max(500) });
 
@@ -138,6 +139,13 @@ function View({ payment, settings }) {
               </Button>
             )
           )}
+          <DeleteRecord
+            url={`/payments/${payment._id}`}
+            what={`receipt ${payment.receiptNumber}`}
+            details={`Invoice ${payment.invoiceNumber} goes back to its balance before this payment.`}
+            invalidate={[['payments'], ['invoices'], ['clients']]}
+            to="/payments"
+          />
         </div>
       </div>
 
