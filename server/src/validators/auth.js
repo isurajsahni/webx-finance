@@ -11,6 +11,12 @@ export const loginBody = z.object({
   password: z.string().min(1, 'Password is required').max(128),
 });
 
+export const recoverBody = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email')),
+  recoveryKey: z.string().trim().min(1, 'Enter the recovery key').max(500),
+  password,
+});
+
 export const changePasswordBody = z.object({
   currentPassword: z.string().min(1).max(128),
   newPassword: password,

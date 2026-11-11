@@ -135,3 +135,18 @@ export async function ensureOwnerFromEnv() {
     console.error(`Could not set up the owner: ${err.message}`);
   }
 }
+
+/**
+ * Forgot password, proven with the recovery key: set the password for `email`
+ * and make it an active owner (creating the account if it does not exist),
+ * then make sure the workspace defaults exist. Signs out its other sessions.
+ */
+export async function recoverOwner(email, password) {
+  const user = (await User.findOne({ email }).select('+passwordHash')) || new User({ name: 'Owner', email });
+  user.role = 'owner';
+  user.isActive = true;
+  await user.setPassword(password);
+  await user.save();
+  await runAs(user, seedRest);
+  return user;
+}

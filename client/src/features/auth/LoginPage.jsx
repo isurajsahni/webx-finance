@@ -100,6 +100,9 @@ export function LoginPage() {
             <Button type="submit" className="w-full" loading={formState.isSubmitting}>
               Sign in
             </Button>
+            <p className="text-center text-sm">
+              <Link to="/forgot-password" className="font-semibold text-brand-600 hover:underline">Forgot password?</Link>
+            </p>
           </form>
         </div>
       </div>

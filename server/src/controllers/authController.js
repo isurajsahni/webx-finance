@@ -1,8 +1,11 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import { env } from '../config/env.js';
 import { User, recordAudit } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { setContextUser } from '../utils/context.js';
 import { setAuthCookie, clearAuthCookie } from '../services/tokens.js';
+import { recoverOwner } from '../services/seed.js';
 
 // Compared against when the email does not exist, so response time does not
 // reveal which emails have accounts.
@@ -23,6 +26,24 @@ export async function login(req, res) {
   setContextUser(user);
   recordAudit({ actor: user._id, actorName: user.name, action: 'login', entity: 'User', entityId: user._id, ip: req.ip });
 
+  setAuthCookie(res, user);
+  res.json({ user: user.toJSON() });
+}
+
+/**
+ * Forgot password without email: the recovery key is the server's JWT_SECRET.
+ * Whoever holds it can already sign any session, so this grants nothing new.
+ */
+export async function recover(req, res) {
+  const { email, recoveryKey, password } = req.body;
+  // Hash both sides so the comparison is constant-time whatever the lengths.
+  const digest = (v) => crypto.createHash('sha256').update(v.trim()).digest();
+  if (!crypto.timingSafeEqual(digest(recoveryKey), digest(env.JWT_SECRET))) {
+    throw ApiError.unauthorized('Recovery key is incorrect', [{ path: 'recoveryKey', message: 'This is not the JWT_SECRET value set on the server' }]);
+  }
+  const user = await recoverOwner(email, password);
+  setContextUser(user);
+  recordAudit({ actor: user._id, actorName: user.name, action: 'password_reset', entity: 'User', entityId: user._id, ip: req.ip });
   setAuthCookie(res, user);
   res.json({ user: user.toJSON() });
 }

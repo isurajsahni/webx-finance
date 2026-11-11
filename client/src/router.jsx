@@ -4,6 +4,7 @@ import { RouteError } from '@/features/common/RouteError';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequireAuth, RequireOwner } from '@/features/auth/guards';
 import { LoginPage } from '@/features/auth/LoginPage';
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { NotFound } from '@/features/common/ComingSoon';
 
 // Pages load on demand, so the first visit only downloads what it needs.
@@ -41,6 +42,7 @@ const ServicesPage = page(() => import('@/features/services/ServicesPage'), 'Ser
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteError /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage />, errorElement: <RouteError /> },
   {
     element: <RequireAuth />,
     errorElement: <RouteError />,
