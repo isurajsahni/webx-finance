@@ -8,3 +8,4 @@ server/uploads/*
 .DS_Store
 *.log
 server/.data/
+exports/
