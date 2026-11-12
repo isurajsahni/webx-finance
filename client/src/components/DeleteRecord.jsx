@@ -11,7 +11,7 @@ import { cn } from '@/lib/cn';
  * Owner-only "Delete permanently" button with a typed confirmation.
  * `what` names the record ("invoice 2026-27/0004"); `details` explains what else goes with it.
  */
-export function DeleteRecord({ url, what, details, invalidate = [], to, className, full = true }) {
+export function DeleteRecord({ url, what, details, invalidate = [], to, className, full = true, compact = false }) {
   const { isOwner } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -29,9 +29,14 @@ export function DeleteRecord({ url, what, details, invalidate = [], to, classNam
 
   return (
     <>
-      <Button variant="ghost" className={cn('text-red-600 hover:bg-red-50', full && 'w-full', className)} onClick={() => setOpen(true)}>
-        <Trash2 className="size-4" /> Delete
-      </Button>
+      {compact ? (
+        // Inline text link, for table rows.
+        <button type="button" className={cn('font-semibold text-red-600 hover:underline', className)} onClick={() => setOpen(true)}>Delete</button>
+      ) : (
+        <Button variant="ghost" className={cn('text-red-600 hover:bg-red-50', full && 'w-full', className)} onClick={() => setOpen(true)}>
+          <Trash2 className="size-4" /> Delete
+        </Button>
+      )}
       <Modal open={open} onClose={close} title={`Delete ${what}?`} size="sm">
         <form
           className="space-y-4"

@@ -15,6 +15,7 @@ import { presetRange } from '@/lib/ranges';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useDebounced } from '@/hooks/useDebounced';
 import { RangePicker } from '@/components/RangePicker';
+import { DeleteRecord } from '@/components/DeleteRecord';
 import { ReasonForm } from '@/features/expenses/ReasonForm';
 import { moneyString } from '@/lib/validation';
 import { cn } from '@/lib/cn';
@@ -89,6 +90,22 @@ function EntryForm({ onDone, onCancel }) {
 
 const sourceLink = (r) =>
   r.sourceModel === 'Payment' ? `/payments/${r.sourceId}` : r.sourceModel === 'Payout' ? `/payouts/${r.sourceId}` : r.type === 'reimbursement' ? `/reimbursements/${r.sourceId}` : r.type === 'expense' ? `/expenses/${r.sourceId}` : null;
+
+/** What deleting a ledger row removes: the record it comes from. */
+function deleteTarget(r) {
+  const doc = r.docNumber ? ` ${r.docNumber}` : '';
+  if (r.sourceModel === 'Payment') return { url: `/payments/${r.sourceId}`, what: `payment${doc}`, details: 'The invoice it was paid against goes back to unpaid for this amount, and the client totals update.' };
+  if (r.sourceModel === 'Payout') return { url: `/payouts/${r.sourceId}`, what: `payout${doc}` };
+  if (r.type === 'reimbursement') return { url: `/reimbursements/${r.sourceId}`, what: `claim${doc}`, details: 'The whole claim is deleted, not only its repayment.' };
+  if (r.type === 'expense') return { url: `/expenses/${r.sourceId}`, what: `expense${doc}` };
+  return {
+    url: `/ledger/entries/${r.sourceId}`,
+    what: `this ${LEDGER_TYPE_LABELS[r.type]?.toLowerCase() || 'manual'} entry`,
+    details: r.type === 'transfer' ? 'Both sides of the transfer are removed.' : undefined,
+  };
+}
+
+const DELETE_INVALIDATES = [['payments'], ['invoices'], ['clients'], ['payouts'], ['team'], ['expenses'], ['reimbursements']];
 
 export function LedgerPage() {
   const qc = useQueryClient();
@@ -206,6 +223,7 @@ export function LedgerPage() {
                               {r.sourceModel === 'LedgerEntry' && isOwner && (
                                 <button type="button" className="ml-2 font-semibold text-red-600 hover:underline" onClick={() => setVoiding(r.sourceId)}>Void</button>
                               )}
+                              <DeleteRecord {...deleteTarget(r)} invalidate={DELETE_INVALIDATES} compact className="ml-2" />
                             </p>
                           </Td>
                           <Td className="whitespace-nowrap text-muted">{r.accountLabel}</Td>
